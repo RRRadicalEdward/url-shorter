@@ -1,0 +1,10 @@
+[package]
+name = "url-shorter-frontend"
+version = "0.1.0"
+authors = [
+    "Sasha Yusuk <thepulticula@gmail.com>"
+]
+edition = "2018"
+
+[dependencies]
+yew = "0.18"
