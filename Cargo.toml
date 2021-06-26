@@ -1,9 +1,9 @@
 [workspace]
 members = [
-    "backend",
-    "frontend"
+    "url-shorter-backend",
+    "url-shorter-frontend"
 ]
 default-members = [
-    "backend",
-    "frontend"
+    "url-shorter-backend",
+    "url-shorter-frontend"
 ]
