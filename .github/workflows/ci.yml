@@ -71,13 +71,13 @@ jobs:
       - name: Run Clippy
         run: cargo clippy --all-features --all-targets -- -D warnings
       - name: Run tests frontend
-        run: cargo test --manifest-path frontend/Cargo.toml --verbose 
+        run: cargo test --manifest-path url-shorter-frontend/Cargo.toml --verbose
       - name: Run tests backend
-        run: cargo test --manifest-path backend/Cargo.toml --verbose
+        run: cargo test --manifest-path url-shorter-backend/Cargo.toml --verbose
       - name: Build release frontend 
-        run: cargo build --verbose --manifest-path frontend/Cargo.toml --target wasm32-unknown-unknown --release 
+        run: cargo build --verbose --manifest-path url-shorter-frontend/Cargo.toml --target wasm32-unknown-unknown --release
       - name: Build release backend
-        run: cargo build --verbose --manifest-path backend/Cargo.toml --release
+        run: cargo build --verbose --manifest-path url-shorter-backend/Cargo.toml --release
       - name: Print sccache stats
         if: matrix.os != 'windows-latest'
         run: sccache --show-stats
