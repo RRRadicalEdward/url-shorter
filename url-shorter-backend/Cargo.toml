@@ -15,7 +15,6 @@ path = "src/lib.rs"
 anyhow = "1.0"
 saphir =  { version = "2.8.2",  features = ["redirect"] }
 tokio = { version = "0.2", features = ["macros", "rt-threaded"] }
-diesel = { version = "1.4", features = ["sqlite", "r2d2"] }
 dotenv = "0.15"
 radix_fmt = "1.0"
 url = "2.2"

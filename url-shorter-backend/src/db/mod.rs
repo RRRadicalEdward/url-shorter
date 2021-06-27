@@ -1,5 +1,5 @@
 use std::convert::{Into, TryInto};
-
+/*
 use diesel::{
     dsl::max,
     insert_into,
@@ -11,22 +11,25 @@ use diesel::{
     sqlite::SqliteConnection,
     ExpressionMethods, OptionalExtension, RunQueryDsl,
 };
+
+ */
 use slog::{debug, error, info, trace, Logger};
 
 pub mod models;
 pub mod schema;
 
 use models::Url;
-use schema::urls;
+//use schema::urls;
 
 #[derive(Clone)]
 pub struct Database {
-    pub pool: Pool<ConnectionManager<SqliteConnection>>,
+    //  pub pool: Pool<ConnectionManager<SqliteConnection>>,
     pub logger: Logger,
 }
 
 impl Database {
     pub fn establish_connection(logger: Logger) -> anyhow::Result<Database> {
+        /*
         let database_url = dotenv::var("DATABASE_URL").map_err(|err| {
             error!(logger, "Failed to fetch database url: {}", err);
             err
@@ -42,9 +45,12 @@ impl Database {
 
         info!(logger, "Connected to Database");
         Ok(Self { pool, logger })
+        */
+        unimplemented!();
     }
 
     pub fn get_new_unique_id(&self) -> anyhow::Result<u32> {
+        /*
         use self::urls::dsl::*;
 
         debug!(self.logger, "Getting a new unique id...");
@@ -67,10 +73,12 @@ impl Database {
         debug!(self.logger, "Successfully get a unique id");
         trace!(self.logger, "A new unique id:{}", unique_id);
 
-        Ok(unique_id)
+        Ok(unique_id)*/
+        unimplemented!();
     }
 
     pub fn save_shorter_url(&self, url_model: Url) -> anyhow::Result<()> {
+        /*
         use self::urls::dsl::*;
 
         let connection = self.pool.get().expect("Pool should not panic");
@@ -79,12 +87,14 @@ impl Database {
             .values(&(shorter_url.eq(url_model.shorter_url), url.eq(url_model.url)))
             .execute(&connection)
             .map_err(Into::<anyhow::Error>::into)?;
+         Ok(())
 
-        Ok(())
+        */
+        unimplemented!();
     }
 
     pub fn get_origin_url(&self, short_url: String) -> anyhow::Result<Option<String>> {
-        use self::urls::dsl::*;
+        /*use self::urls::dsl::*;
 
         let connection = self.pool.get().expect("Pool should not panic");
 
@@ -95,5 +105,9 @@ impl Database {
             .optional()
             .map_err(Into::<anyhow::Error>::into)?
             .map(|(_, _, origin_url)| origin_url))
+
+         */
+
+        unimplemented!();
     }
 }

@@ -1,3 +1,4 @@
+/*
 table! {
     urls (id) {
         id -> BigInt,
@@ -5,3 +6,5 @@ table! {
         url -> Text,
     }
 }
+
+ */

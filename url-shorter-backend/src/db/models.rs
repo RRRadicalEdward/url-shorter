@@ -1,7 +1,7 @@
-use super::schema::urls;
+//use super::schema::urls;
 
-#[derive(Queryable, Insertable)]
-#[table_name = "urls"]
+//#[derive(Queryable, Insertable)]
+//#[table_name = "urls"]
 pub struct Url<'u> {
     pub id: i64,
     pub shorter_url: &'u str,
