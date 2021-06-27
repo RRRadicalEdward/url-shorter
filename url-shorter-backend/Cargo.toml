@@ -13,13 +13,16 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow = "1.0"
-saphir =  { version = "2.8.2",  features = ["redirect"] }
+saphir =  { version = "2.8",  features = ["redirect"] }
+serde = { version = "1.0", default-features = false, features = ["derive"] }
 tokio = { version = "0.2", features = ["macros", "rt-threaded"] }
+mongodb = { version = "1.2", default-features = false, features = ["tokio-runtime"] }
+lazy_static = "1.4"
 dotenv = "0.15"
 radix_fmt = "1.0"
 url = "2.2"
 
 slog = { version = "2.5", features = ["max_level_trace", "release_max_level_debug"] }
-slog-envlogger = { version = "2.2.0", default-features = false }
+slog-envlogger = { version = "2.2", default-features = false }
 slog-term =  "2.8"
 slog-async = "2.6"

@@ -1,113 +1,117 @@
-use std::convert::{Into, TryInto};
-/*
-use diesel::{
-    dsl::max,
-    insert_into,
-    query_dsl::{
-        filter_dsl::FilterDsl,
-        methods::{OrderDsl, SelectDsl},
-    },
-    r2d2::{ConnectionManager, Pool},
-    sqlite::SqliteConnection,
-    ExpressionMethods, OptionalExtension, RunQueryDsl,
+use anyhow::Context;
+use mongodb::{
+    bson::{doc, Document},
+    options::ClientOptions,
+    Client, Database as MongoDatabase,
+};
+use slog::{info, Logger};
+use std::{
+    env,
+    error::Error,
+    fmt::{self, Formatter},
 };
 
- */
-use slog::{debug, error, info, trace, Logger};
-
 pub mod models;
-pub mod schema;
-
 use models::Url;
-//use schema::urls;
+
+const DATABASE_URL: &str = "DATABASE_URL";
 
 #[derive(Clone)]
 pub struct Database {
-    //  pub pool: Pool<ConnectionManager<SqliteConnection>>,
+    pub inner: MongoDatabase,
     pub logger: Logger,
 }
 
 impl Database {
-    pub fn establish_connection(logger: Logger) -> anyhow::Result<Database> {
-        /*
-        let database_url = dotenv::var("DATABASE_URL").map_err(|err| {
-            error!(logger, "Failed to fetch database url: {}", err);
-            err
-        })?;
-
-        let pool = Pool::builder()
-            .max_size(16)
-            .build(ConnectionManager::<SqliteConnection>::new(database_url))
-            .map_err(|err| {
-                error!(logger, "Failed to create DB pool:{}", err);
-                err
-            })?;
-
-        info!(logger, "Connected to Database");
-        Ok(Self { pool, logger })
-        */
-        unimplemented!();
-    }
-
-    pub fn get_new_unique_id(&self) -> anyhow::Result<u32> {
-        /*
-        use self::urls::dsl::*;
-
-        debug!(self.logger, "Getting a new unique id...");
-
-        let connection = self.pool.get().expect("Pool should not panic");
-
-        let query_result: Option<i64> = urls
-            .order(id)
-            .select(max(id))
-            .first::<Option<_>>(&connection)
-            .optional()
-            .map_err(Into::<anyhow::Error>::into)?
-            .flatten();
-
-        let unique_id = match query_result {
-            Some(max_id) => TryInto::<u32>::try_into(max_id).expect("Should not panic") + 1,
-            None => 0,
+    pub async fn establish_connection(logger: Logger) -> anyhow::Result<Database> {
+        let database_url = match (dotenv::var(DATABASE_URL), env::var(DATABASE_URL)) {
+            (Ok(database_url), _) => {
+                info!(logger, "Using DATABASE_URL from .env: {}", database_url);
+                database_url
+            }
+            (_, Ok(database_url)) => {
+                info!(
+                    logger,
+                    "Using DATABASE_URL from the environment variable: {}", database_url
+                );
+                database_url
+            }
+            _ => {
+                return Err(anyhow::anyhow!(
+                    "No DATABASE_URL specified in .env neither in the environment variable"
+                ))
+            }
         };
 
-        debug!(self.logger, "Successfully get a unique id");
-        trace!(self.logger, "A new unique id:{}", unique_id);
+        let options = ClientOptions::parse(&database_url)
+            .await
+            .with_context(|| "Failed to parse DATABASE_URL")?;
+        let options = ClientOptions::builder()
+            .credential(options.credential)
+            .max_pool_size(Some(8))
+            .min_pool_size(Some(0))
+            .build();
 
-        Ok(unique_id)*/
-        unimplemented!();
+        let client = Client::with_options(options).with_context(|| "Failed to create a client connected to MongoDB")?;
+        let database = client.database("url-shorter");
+
+        info!(logger, "Connected to Database");
+
+        Ok(Self {
+            inner: database,
+            logger,
+        })
     }
 
-    pub fn save_shorter_url(&self, url_model: Url) -> anyhow::Result<()> {
-        /*
-        use self::urls::dsl::*;
+    pub async fn save_shorter_url(&self, url_model: Url<'_>) -> anyhow::Result<()> {
+        let urls = self.inner.collection("urls");
+        let id = url_model.id;
+        urls.insert_one(Document::from(url_model), None).await?;
 
-        let connection = self.pool.get().expect("Pool should not panic");
-
-        insert_into(urls)
-            .values(&(shorter_url.eq(url_model.shorter_url), url.eq(url_model.url)))
-            .execute(&connection)
-            .map_err(Into::<anyhow::Error>::into)?;
-         Ok(())
-
-        */
-        unimplemented!();
+        urls.find_one(
+            doc! {
+                "id": id
+            },
+            None,
+        )
+        .await?
+        .ok_or_else(|| {
+            NotFound {
+                message: "Failed to find saved shorter URL".to_string(),
+            }
+            .into()
+        })
+        .map(|_| ())
     }
 
-    pub fn get_origin_url(&self, short_url: String) -> anyhow::Result<Option<String>> {
-        /*use self::urls::dsl::*;
+    pub async fn get_origin_url(&self, short_url: String) -> anyhow::Result<String> {
+        let urls = self.inner.collection("urls");
+        urls.find_one(
+            doc! {
+                "shorter_url": short_url
+            },
+            None,
+        )
+        .await?
+        .map(|mut doc| doc.entry(String::from("url")).key().to_string())
+        .ok_or_else(|| {
+            NotFound {
+                message: "Failed to find origin URL by its shorted variant".to_string(),
+            }
+            .into()
+        })
+    }
+}
 
-        let connection = self.pool.get().expect("Pool should not panic");
+#[derive(Debug)]
+struct NotFound {
+    message: String,
+}
 
-        Ok(urls
-            .order(id)
-            .filter(shorter_url.eq(short_url))
-            .first::<(i64, String, String)>(&connection)
-            .optional()
-            .map_err(Into::<anyhow::Error>::into)?
-            .map(|(_, _, origin_url)| origin_url))
+impl Error for NotFound {}
 
-         */
-
-        unimplemented!();
+impl fmt::Display for NotFound {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.message)
     }
 }
