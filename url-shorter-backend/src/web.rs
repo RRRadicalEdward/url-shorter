@@ -1,5 +1,3 @@
-use super::db::{models, Database};
-use crate::utils::{HttpResponseEx, OptionLogger, ResultLogger};
 use saphir::{
     body::Body,
     controller::{Controller, ControllerEndpoint, EndpointsBuilder},
@@ -10,6 +8,13 @@ use saphir::{
 };
 use slog::{debug, info, o, Logger};
 use url::Url;
+
+use crate::{
+    db::{models, Database},
+    utils::{HttpResponseEx, ResultLogger},
+    SHORT_URL_COUNT,
+};
+use std::sync::atomic::Ordering;
 
 pub struct ShorterController {
     database: Database,
@@ -36,13 +41,8 @@ impl ShorterController {
         let origin_url = self
             .database
             .get_origin_url(shorted_url.clone())
+            .await
             .log_on_err(&db_logger, "Failed to check if shorted URL exists in database")
-            .or_bad_request()?
-            .log_on_none(
-                &web_logger,
-                format!("Did not find `{}` in the DB", shorted_url).as_str(),
-            )
-            .ok_or(())
             .or_bad_request()?;
 
         debug!(
@@ -64,23 +64,22 @@ impl ShorterController {
             .log_on_err(&web_logger, format!("Got incorrect URL: {}", url).as_str())
             .or_bad_request()?;
 
-        let db_logger = self.database.logger.new(o!("Shortening URL: " => url.clone()));
-
-        let unique_id = self
-            .database
-            .get_new_unique_id()
-            .log_on_err(&db_logger, "Failed to get a unique id")
-            .or_internal_error()?;
-
-        debug!(self.web_logger, "Got a unique_id: {}", unique_id);
-
+        let unique_id = SHORT_URL_COUNT.fetch_add(1, Ordering::Relaxed) + 1;
         let shorted_url = radix_fmt::radix_36(unique_id).to_string();
 
-        let url_model = models::Url::new(shorted_url.as_str(), url.as_str());
+        let url_model = models::Url {
+            id: unique_id,
+            shorter_url: shorted_url.as_str(),
+            url: url.as_str(),
+        };
 
+        debug!(self.web_logger, "Got a unique_id: {}", url_model.id);
+
+        let db_logger = self.database.logger.new(o!("Shortening URL: " => url.clone()));
         self.database
             .save_shorter_url(url_model)
-            .log_on_err(&self.database.logger, "Failed to save shorted URL: {}")
+            .await
+            .log_on_err(&db_logger, "Failed to save shorted URL: {}")
             .or_internal_error()?;
 
         info!(

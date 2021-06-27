@@ -1,3 +1,4 @@
+use anyhow::Context;
 use dotenv::dotenv;
 use lib::{
     db::Database,
@@ -17,7 +18,9 @@ async fn main() -> anyhow::Result<()> {
     let db_logger = logger.new(o!("Database" => "connection"));
 
     dotenv().ok();
-    let database = Database::establish_connection(db_logger)?;
+    let database = Database::establish_connection(db_logger)
+        .await
+        .with_context(|| "Failed to connect to MongoDB")?;
 
     let server = Server::builder()
         .configure_listener(|l| l.interface(DEFAULT_IP_ADDR).server_name("url-shorter"))
@@ -30,7 +33,5 @@ async fn main() -> anyhow::Result<()> {
         })
         .build();
 
-    server.run().await.map_err(Into::<anyhow::Error>::into)?;
-
-    Ok(())
+    server.run().await.map_err(Into::<anyhow::Error>::into)
 }
