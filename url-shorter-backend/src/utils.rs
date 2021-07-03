@@ -47,20 +47,6 @@ where
     }
 }
 
-pub trait OptionLogger {
-    fn log_on_none(self, logger: &Logger, message: &str) -> Self;
-}
-
-impl<T> OptionLogger for Option<T> {
-    fn log_on_none(self, logger: &Logger, message: &str) -> Self {
-        if self.is_none() {
-            error!(logger, "{}", message);
-        }
-
-        self
-    }
-}
-
 pub trait HttpResponseEx<T> {
     fn or_bad_request(self) -> Result<T, HttpResponse>;
     fn or_internal_error(self) -> Result<T, HttpResponse>;
