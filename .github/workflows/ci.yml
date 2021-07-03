@@ -9,7 +9,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, "windows-latest"]
-        mongodb-version: ['4.4']
         rust: [stable]
         include:
           - os: ubuntu-latest
@@ -64,8 +63,17 @@ jobs:
           key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-sccache-
-      - name: Start MongoDB on ${{ matrix.os }}
-        run: docker run --name mongo -d -p 27017:27017 mongo:latest
+      - name: Start MongoDB on Ubuntu-latest
+        if: matrix.os == 'ubuntu-latest'
+        uses: DigiPie/mongo-action@v1.0.1
+        with:
+          image-version: latest
+          port: 27017
+      - name: Start MongoDB on Windows-latest
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "docker run --name mongo -d -p 27017:27017 mongo:latest"
+        shell: cmd
       - name: Test MongoDB connection on Ubuntu-latest
         if: matrix.os == 'ubuntu-latest'
         run: sudo mongo localhost:27017
