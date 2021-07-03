@@ -40,7 +40,7 @@ jobs:
         run: |
           $SCCACHE_FILE = "sccache-$Env:SCCACHE_VERSION-x86_64-pc-windows-msvc"
           echo "$Env:SCCACHE_LINK/$Env:SCCACHE_VERSION/$SCCACHE_FILE.tar.gz"
-          curl -LO "$Env:SCCACHE_LINK/$Env:SCCACHE_VERSION/$SCCACHE_FILE.tar.gz"
+          curl -L "$Env:SCCACHE_LINK/$Env:SCCACHE_VERSION/$SCCACHE_FILE.tar.gz"
           tar xzf "$SCCACHE_FILE.tar.gz"
           echo "$Env:GITHUB_WORKSPACE/$SCCACHE_FILE" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Install Rust ${{ matrix.rust }}
@@ -69,13 +69,13 @@ jobs:
           key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-sccache-
-      - name: Start MongoDB on Ubuntu-latest
+      - name: Start MongoDB (ubuntu-latest)
         if: matrix.os == 'ubuntu-latest'
         uses: DigiPie/mongo-action@v1.0.1
         with:
           image-version: latest
           port: 27017
-      - name: Start MongoDB on Windows-latest
+      - name: Start MongoDB (windows-latest)
         if: matrix.os == 'windows-latest'
         run: |
           echo "docker run --name mongo -d -p 27017:27017 mongo:latest"
