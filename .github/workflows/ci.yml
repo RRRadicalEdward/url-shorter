@@ -8,34 +8,41 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, "windows-latest"]
+        os: [ubuntu-latest, windows-latest]
         rust: [stable]
         include:
           - os: ubuntu-latest
             sccache-path: /home/runner/.cache/sccache
-            rustc-wrapper: sccache
           - os: windows-latest
-            rustc-wrapper:
+            sccache-path: C:\sccache
+
     env:
       RUST_BACKTRACE: full
-      RUSTC_WRAPPER: ${{ matrix.rustc-wrapper }}
+      RUSTC_WRAPPER: sccache
       RUSTV: ${{ matrix.rust }}
       SCCACHE_CACHE_SIZE: 2G
       SCCACHE_DIR: ${{ matrix.sccache-path }}
+      SCCACHE_LINK: https://github.com/mozilla/sccache/releases/download
+      SCCACHE_VERSION: v0.2.15
     steps:
       - uses: actions/checkout@v2
       - name: Install sccache (ubuntu-latest)
         if: matrix.os == 'ubuntu-latest'
-        env:
-          LINK: https://github.com/mozilla/sccache/releases/download
-          SCCACHE_VERSION: v0.2.15
         run: |
           SCCACHE_FILE=sccache-$SCCACHE_VERSION-x86_64-unknown-linux-musl
           mkdir -p $HOME/.local/bin
-          curl -L "$LINK/$SCCACHE_VERSION/$SCCACHE_FILE.tar.gz" | tar xz
+          curl -L "$SCCACHE_LINK/$SCCACHE_VERSION/$SCCACHE_FILE.tar.gz" | tar xz
           mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
           chmod a+x $HOME/.local/bin/sccache
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Install sccache (windows-latest)
+        if: matrix.os == 'windows-latest'
+        run: |
+          $SCCACHE_FILE = "sccache-$Env:SCCACHE_VERSION-x86_64-pc-windows-msvc"
+          echo "$Env:SCCACHE_LINK/$Env:SCCACHE_VERSION/$SCCACHE_FILE.tar.gz"
+          curl -LO "$Env:SCCACHE_LINK/$Env:SCCACHE_VERSION/$SCCACHE_FILE.tar.gz"
+          tar xzf "$SCCACHE_FILE.tar.gz"
+          echo "$Env:GITHUB_WORKSPACE/$SCCACHE_FILE" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Install Rust ${{ matrix.rust }}
         uses: actions-rs/toolchain@v1
         with:
@@ -49,27 +56,26 @@ jobs:
         continue-on-error: false
         with:
           path: |
-            ~/.cargo/registry
+            ~/.cargo/registry/cache
             ~/.cargo/git
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-cargo-registry-
       - name: Save sccache
-        if: matrix.os != 'windows-latest'
         uses: actions/cache@v2
         continue-on-error: false
         with:
           path: ${{ matrix.sccache-path }}
-          key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-sccache-${{ hashFiles('**/*') }}
           restore-keys: |
             ${{ runner.os }}-sccache-
-      - name: Start MongoDB on Ubuntu-latest
+      - name: Start MongoDB (ubuntu-latest)
         if: matrix.os == 'ubuntu-latest'
         uses: DigiPie/mongo-action@v1.0.1
         with:
           image-version: latest
           port: 27017
-      - name: Start MongoDB on Windows-latest
+      - name: Start MongoDB (windows-latest)
         if: matrix.os == 'windows-latest'
         run: |
           echo "docker run --name mongo -d -p 27017:27017 mongo:latest"
@@ -81,7 +87,6 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: mongo localhost:27017
       - name: Start sccache server
-        if: matrix.os != 'windows-latest'
         run: sccache --start-server
       - name: Run CargoFmt
         run: cargo fmt --all -- --check
@@ -96,8 +101,6 @@ jobs:
       - name: Build release backend
         run: cargo build --verbose --manifest-path url-shorter-backend/Cargo.toml --release
       - name: Print sccache stats
-        if: matrix.os != 'windows-latest'
         run: sccache --show-stats
       - name: Stop sccache server
-        if: matrix.os != 'windows-latest'
         run: sccache --stop-server || true
