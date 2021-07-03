@@ -72,8 +72,7 @@ jobs:
           port: 27017
       - name: Start MongoDB on Windows-latest
         if: matrix.os == 'windows-latest'
-        run: |
-          echo "docker run --name mongo -d -p 27017:27017 mongo:latest"
+        run: docker run --name mongo -d -p 27017:27017 mongo:latest
         shell: powershell
       - name: Test MongoDB connection on Ubuntu-latest
         if: matrix.os == 'ubuntu-latest'
