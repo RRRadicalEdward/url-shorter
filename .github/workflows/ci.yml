@@ -9,6 +9,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, "windows-latest"]
+        mongodb-version: ['4.4']
         rust: [stable]
         include:
           - os: ubuntu-latest
@@ -63,6 +64,10 @@ jobs:
           key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-sccache-
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.6.0
+        with:
+          mongodb-version: ${{ matrix.mongodb-version }}
       - name: Start sccache server
         if: matrix.os != 'windows-latest'
         run: sccache --start-server
