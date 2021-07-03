@@ -69,9 +69,10 @@ jobs:
         with:
           image-version: ${{ matrix.mongodb-version }}
           port: 27017
-      - name: Test MongoDB connection
+      - name: Test MongoDB connection on Ubuntu-latest
         if: matrix.os == 'ubuntu-latest'
         run: "sudo mongo localhost:27017"
+      - name: Test MongoDB connection on Windows-latest
         if: matrix.os == 'windows-latest'
         run: "mongo localhost:27017"
       - name: Start sccache server
