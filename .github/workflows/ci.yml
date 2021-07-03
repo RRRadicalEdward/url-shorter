@@ -11,10 +11,18 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         rust: [stable]
         include:
-          - os: ubuntu-latest
+          - conf: run-ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
             sccache-path: /home/runner/.cache/sccache
-          - os: windows-latest
+          - conf: rub-windows-latest
+            target: x86_64-pc-windows-msvc
+            os: windows-latest
             sccache-path: C:\sccache
+          - conf: run-wasm
+            target: wasm32-unknown-unknown
+            os: ubuntu-latest
+            sccache-path: /home/runner/.cache/sccache
 
     env:
       RUST_BACKTRACE: full
@@ -49,7 +57,7 @@ jobs:
           toolchain: ${{ matrix.rust }}
           profile: minimal
           override: true
-          target: wasm32-unknown-unknown
+          target: ${{ matrix.target }}
           components: rustfmt, clippy
       - name: Cache cargo registry
         uses: actions/cache@v2
@@ -89,16 +97,22 @@ jobs:
       - name: Start sccache server
         run: sccache --start-server
       - name: Run CargoFmt
+        if: matrix.os == 'ubuntu-latest'
         run: cargo fmt --all -- --check
       - name: Run Clippy
+        if: matrix.os == 'ubuntu-latest'
         run: cargo clippy --all-features --all-targets -- -D warnings
       - name: Run tests frontend
+        if: matrix.conf == 'run-wasm'
         run: cargo test --manifest-path url-shorter-frontend/Cargo.toml --verbose
       - name: Run tests backend
+        if: matrix.conf != 'run-wasn'
         run: cargo test --manifest-path url-shorter-backend/Cargo.toml --verbose
-      - name: Build release frontend 
+      - name: Build release frontend
+        if: matrix.conf == 'run-wasn'
         run: cargo build --verbose --manifest-path url-shorter-frontend/Cargo.toml --target wasm32-unknown-unknown --release
       - name: Build release backend
+        if: matrix.conf != 'run-wasn'
         run: cargo build --verbose --manifest-path url-shorter-backend/Cargo.toml --release
       - name: Print sccache stats
         run: sccache --show-stats
