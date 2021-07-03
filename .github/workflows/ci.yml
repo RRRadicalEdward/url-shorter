@@ -79,7 +79,6 @@ jobs:
           Start-Service docker
           docker network prune
           echo "docker run --name mongo -d -p 27017:27017 mongo:latest"
-          docker run --name mongo -d -p 27017:27017 mongo:latest
         shell: powershell
       - name: Test MongoDB connection on Ubuntu-latest
         if: matrix.os == 'ubuntu-latest'
