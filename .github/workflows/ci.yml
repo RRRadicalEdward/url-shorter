@@ -65,9 +65,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sccache-
       - name: Start MongoDB
-        uses: supercharge/mongodb-github-action@1.6.0
+        uses: DigiPie/mongo-action@v1.0.1
         with:
-          mongodb-version: ${{ matrix.mongodb-version }}
+          image-version: ${{ matrix.mongodb-version }}
+          port: 27017
+      - name: Test MongoDB connection
+        if: matrix.os == 'ubuntu-latest'
+        run: "sudo mongo localhost:27017"
+        if: matrix.os == 'windows-latest'
+        run: "mongo localhost:27017"
       - name: Start sccache server
         if: matrix.os != 'windows-latest'
         run: sccache --start-server
