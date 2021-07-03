@@ -73,11 +73,6 @@ jobs:
       - name: Start MongoDB on Windows-latest
         if: matrix.os == 'windows-latest'
         run: |
-          Stop-Service docker
-          Stop-service hns
-          Start-service hns
-          Start-Service docker
-          docker network prune
           echo "docker run --name mongo -d -p 27017:27017 mongo:latest"
         shell: powershell
       - name: Test MongoDB connection on Ubuntu-latest
