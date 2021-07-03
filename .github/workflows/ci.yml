@@ -56,11 +56,11 @@ jobs:
         continue-on-error: false
         with:
           path: |
-            ~/.cargo/registry
+            ~/.cargo/registry/cache
             ~/.cargo/git
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-cargo-registry-
       - name: Save sccache
         uses: actions/cache@v2
         continue-on-error: false
