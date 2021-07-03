@@ -66,10 +66,7 @@ jobs:
             ${{ runner.os }}-sccache-
       - name: Start MongoDB on Ubuntu-latest
         if: matrix.os == 'ubuntu-latest'
-        uses: DigiPie/mongo-action@v1.0.1
-        with:
-          image-version: ${{ matrix.mongodb-version }}
-          port: 27017
+        run: docker run --name mongo -d -p 27017:27017 mongo:latest
       - name: Start MongoDB on Windows-latest
         if: matrix.os == 'windows-latest'
         run: |
@@ -77,10 +74,10 @@ jobs:
         shell: cmd
       - name: Test MongoDB connection on Ubuntu-latest
         if: matrix.os == 'ubuntu-latest'
-        run: "sudo mongo localhost:27017"
+        run: sudo mongo localhost:27017
       - name: Test MongoDB connection on Windows-latest
         if: matrix.os == 'windows-latest'
-        run: "mongo localhost:27017"
+        run: mongo localhost:27017
       - name: Start sccache server
         if: matrix.os != 'windows-latest'
         run: sccache --start-server
