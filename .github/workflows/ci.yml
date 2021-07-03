@@ -40,7 +40,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
-          scoop install sccache
+          scoop install sccache@$SCCACHE_FILE
         shell: powershell
       - name: Install Rust ${{ matrix.rust }}
         uses: actions-rs/toolchain@v1
@@ -61,7 +61,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
       - name: Save sccache
-        if: matrix.os != 'windows-latest'
         uses: actions/cache@v2
         continue-on-error: false
         with:
@@ -70,7 +69,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sccache-
       - name: Start sccache server
-        if: matrix.os != 'windows-latest'
         run: sccache --start-server
       - name: Run CargoFmt
         run: cargo fmt --all -- --check
@@ -85,8 +83,6 @@ jobs:
       - name: Build release backend
         run: cargo build --verbose --manifest-path backend/Cargo.toml --release
       - name: Print sccache stats
-        if: matrix.os != 'windows-latest'
         run: sccache --show-stats
       - name: Stop sccache server
-        if: matrix.os != 'windows-latest'
         run: sccache --stop-server || true
