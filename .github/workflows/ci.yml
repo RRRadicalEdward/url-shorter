@@ -65,8 +65,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sccache-
       - name: Start MongoDB on ${{ matrix.os }}
-        run: |
-          echo "docker run --name mongo -d -p 27017:27017 mongo:latest"
+        run: docker run --name mongo -d -p 27017:27017 mongo:latest
       - name: Test MongoDB connection on Ubuntu-latest
         if: matrix.os == 'ubuntu-latest'
         run: sudo mongo localhost:27017
