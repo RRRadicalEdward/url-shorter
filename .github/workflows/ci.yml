@@ -64,14 +64,9 @@ jobs:
           key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-sccache-
-      - name: Start MongoDB on Ubuntu-latest
-        if: matrix.os == 'ubuntu-latest'
-        run: docker run --name mongo -d -p 27017:27017 mongo:latest
-      - name: Start MongoDB on Windows-latest
-        if: matrix.os == 'windows-latest'
+      - name: Start MongoDB on ${{ matrix.os }}
         run: |
           echo "docker run --name mongo -d -p 27017:27017 mongo:latest"
-        shell: cmd
       - name: Test MongoDB connection on Ubuntu-latest
         if: matrix.os == 'ubuntu-latest'
         run: sudo mongo localhost:27017
