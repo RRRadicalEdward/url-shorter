@@ -6,6 +6,11 @@ jobs:
   build:
     name: Test rust ${{ matrix.rust }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
     strategy:
       matrix:
         os: [ubuntu-latest, "windows-latest"]
@@ -64,11 +69,6 @@ jobs:
           key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-sccache-
-      - name: Start MongoDB
-        uses: DigiPie/mongo-action@v1.0.1
-        with:
-          image-version: ${{ matrix.mongodb-version }}
-          port: 27017
       - name: Test MongoDB connection on Ubuntu-latest
         if: matrix.os == 'ubuntu-latest'
         run: "sudo mongo localhost:27017"
