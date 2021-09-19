@@ -14,7 +14,7 @@ use std::{
 pub mod models;
 use models::Url;
 
-const DATABASE_URL: &str = "DATABASE_URL";
+const ARG_DATABASE_URL: &str = "DATABASE_URL";
 
 #[derive(Clone)]
 pub struct Database {
@@ -24,7 +24,7 @@ pub struct Database {
 
 impl Database {
     pub async fn establish_connection(logger: Logger) -> anyhow::Result<Database> {
-        let database_url = match (dotenv::var(DATABASE_URL), env::var(DATABASE_URL)) {
+        let database_url = match (dotenv::var(ARG_DATABASE_URL), env::var(ARG_DATABASE_URL)) {
             (Ok(database_url), _) => {
                 info!(logger, "Using DATABASE_URL from .env: {}", database_url);
                 database_url
@@ -113,5 +113,58 @@ impl Error for NotFound {}
 impl fmt::Display for NotFound {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.message)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use lazy_static::lazy_static;
+    use std::{
+        ops::{Deref, DerefMut},
+        process::Command,
+        sync::Arc,
+    };
+    use tokio::{runtime::Runtime, sync::Mutex};
+
+    lazy_static! {
+        pub static ref DATABASE: Arc<Mutex<Database>> = {
+            let mut runtime = Runtime::new().unwrap();
+
+            let exit_status = Command::new("sh")
+                .arg("tests/startup-test-mongodb.sh")
+                .spawn()
+                .unwrap()
+                .wait()
+                .unwrap();
+
+            if !exit_status.success() {
+                panic!("Failed to execute the command");
+            }
+
+            dotenv::from_filename("tests/test.env").ok();
+
+            let logger = crate::utils::build_logger();
+
+            let db = runtime.block_on(Database::establish_connection(logger)).unwrap();
+
+            Arc::new(Mutex::new(db))
+        };
+    }
+
+    #[test]
+    fn startup_database() {
+        let _ = DATABASE.clone();
+    }
+
+    #[tokio::test]
+    async fn save_url_into_database() {
+        let database = DATABASE.clone();
+
+        let database = &mut *database.lock().await;
+        database
+            .save_shorter_url(Url::new("http://hello-world").unwrap())
+            .await
+            .unwrap();
     }
 }

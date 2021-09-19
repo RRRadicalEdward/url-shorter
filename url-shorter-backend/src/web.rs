@@ -2,19 +2,15 @@ use saphir::{
     body::Body,
     controller::{Controller, ControllerEndpoint, EndpointsBuilder},
     http::{Method, StatusCode},
-    macros::controller,
     request::Request,
     response::{Builder as HttpResponse, Response},
 };
 use slog::{debug, info, o, Logger};
-use url::Url;
 
 use crate::{
     db::{models, Database},
     utils::{HttpResponseEx, ResultLogger},
-    SHORT_URL_COUNT,
 };
-use std::sync::atomic::Ordering;
 
 pub struct ShorterController {
     database: Database,
@@ -60,18 +56,11 @@ impl ShorterController {
 
         let web_logger = self.web_logger.new(o!("Shortening URL: " => url.clone()));
 
-        Url::parse(url.as_str())
+        let url_model = models::Url::new(url.as_str())
             .log_on_err(&web_logger, format!("Got incorrect URL: {}", url).as_str())
             .or_bad_request()?;
 
-        let unique_id = SHORT_URL_COUNT.fetch_add(1, Ordering::Relaxed) + 1;
-        let shorted_url = radix_fmt::radix_36(unique_id).to_string();
-
-        let url_model = models::Url {
-            id: unique_id,
-            shorter_url: shorted_url.as_str(),
-            url: url.as_str(),
-        };
+        let shorted_url = url_model.short_url.clone();
 
         debug!(self.web_logger, "Got a unique_id: {}", url_model.id);
 
@@ -104,12 +93,24 @@ impl Controller for ShorterController {
             .build()
     }
 }
+
 pub struct HealthController {}
 
-#[controller(name = "health")]
 impl HealthController {
-    #[get("/")]
-    pub async fn health_controller(&self) -> (StatusCode, String) {
+    pub async fn health_controller(&self, _: Request<Body>) -> (StatusCode, String) {
         (StatusCode::OK, String::from("It's ALIVE!!!"))
+    }
+}
+
+impl Controller for HealthController {
+    const BASE_PATH: &'static str = "/";
+
+    fn handlers(&self) -> Vec<ControllerEndpoint<Self>>
+    where
+        Self: Sized,
+    {
+        EndpointsBuilder::new()
+            .add(Method::GET, "/", Self::health_controller)
+            .build()
     }
 }

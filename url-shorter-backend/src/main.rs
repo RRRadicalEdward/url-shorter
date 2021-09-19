@@ -9,7 +9,7 @@ use saphir::prelude::*;
 use slog::{info, o};
 use std::convert::Into;
 
-const DEFAULT_IP_ADDR: &str = "127.0.0.1:8080";
+const DEFAULT_IP_ADDR: &str = "127.0.0.1:5050";
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

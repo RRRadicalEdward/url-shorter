@@ -10,6 +10,31 @@ use std::fmt;
 
 const DEFAULT_LOG_CHAN_SIZE: usize = 256;
 
+/*
+mod tests {
+    use slog::Logger;
+
+    fn build_file_logger() -> Logger {
+        let term_decorator = TermDecorator::new().build();
+        let term_fmt = FullFormat::new(term_decorator).use_local_timestamp().build().fuse();
+
+        let drain = Async::new(slog_envlogger::new(term_fmt).fuse())
+            .chan_size(DEFAULT_LOG_CHAN_SIZE)
+            .overflow_strategy(OverflowStrategy::DropAndReport)
+            .build()
+            .fuse();
+
+        Logger::root(
+            drain,
+            o!("backend" => slog::FnValue(
+                move |info| {
+                    format!("[{}]", info.module())
+                }
+            )),
+        )
+    }
+}*/
+
 pub fn build_logger() -> Logger {
     let term_decorator = TermDecorator::new().build();
     let term_fmt = FullFormat::new(term_decorator).use_local_timestamp().build().fuse();
