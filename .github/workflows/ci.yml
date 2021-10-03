@@ -102,16 +102,16 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: cargo clippy --all-features --all-targets -- -D warnings
       - name: Build release frontend
-        if: matrix.conf == 'run-wasn'
+        if: matrix.conf == 'run-wasm'
         run: cargo build --verbose --manifest-path url-shorter-frontend/Cargo.toml --target wasm32-unknown-unknown --release
       - name: Build release backend
-        if: matrix.conf != 'run-wasn'
+        if: matrix.conf != 'run-wasm'
         run: cargo build --verbose --manifest-path url-shorter-backend/Cargo.toml --release
       - name: Run tests frontend
         if: matrix.conf == 'run-wasm'
         run: cargo test --manifest-path url-shorter-frontend/Cargo.toml --verbose
       - name: Run tests backend
-        if: matrix.conf != 'run-wasn'
+        if: matrix.conf != 'run-wasm'
         run: cargo test --manifest-path url-shorter-backend/Cargo.toml --verbose
       - name: Print sccache stats
         run: sccache --show-stats
