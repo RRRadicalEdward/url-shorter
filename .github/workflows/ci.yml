@@ -43,9 +43,8 @@ jobs:
           mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
           chmod a+x $HOME/.local/bin/sccache
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-      - name: Install sccache (windows-latest)
-        if: matrix.os == 'windows-latest'
-        run: |
+        if: matrix.os == 'windows-latest
+        run:
           $SCCACHE_FILE = "sccache-$Env:SCCACHE_VERSION-x86_64-pc-windows-msvc"
           curl -LO "$Env:SCCACHE_LINK/$Env:SCCACHE_VERSION/$SCCACHE_FILE.tar.gz"
           tar xzf "$SCCACHE_FILE.tar.gz"
@@ -110,7 +109,7 @@ jobs:
       - name: Run tests frontend
         if: matrix.conf == 'run-wasm'
         run: cargo test --manifest-path url-shorter-frontend/Cargo.toml --verbose
-      - name: Run tests backend
+      - name: Run tests backen
         if: matrix.conf != 'run-wasm'
         run: cargo test --manifest-path url-shorter-backend/Cargo.toml --verbose
       - name: Print sccache stats
