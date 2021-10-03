@@ -7,4 +7,8 @@ authors = [
 edition = "2018"
 
 [dependencies]
-yew = "0.18"
+yew = "0.17"
+muicss-yew = { git = "https://github.com/AlephAlpha/muicss-yew" }
+log = "0.4"
+wasm-logger = "0.2"
+anyhow = "1.0"
