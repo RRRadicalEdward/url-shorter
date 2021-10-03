@@ -120,11 +120,7 @@ impl fmt::Display for NotFound {
 mod tests {
     use super::*;
     use lazy_static::lazy_static;
-    use std::{
-        ops::{Deref, DerefMut},
-        process::Command,
-        sync::Arc,
-    };
+    use std::{process::Command, sync::Arc};
     use tokio::{runtime::Runtime, sync::Mutex};
 
     lazy_static! {

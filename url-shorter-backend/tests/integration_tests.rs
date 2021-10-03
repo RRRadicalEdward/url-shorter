@@ -1,4 +1,4 @@
-use lib::{web::HealthController, *};
+use lib::web::HealthController;
 use saphir::server::Server;
 use std::time::Duration;
 use tokio::time;
