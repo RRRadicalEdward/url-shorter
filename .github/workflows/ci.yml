@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   build:
@@ -43,11 +43,9 @@ jobs:
           mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
           chmod a+x $HOME/.local/bin/sccache
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-      - name: Install sccache (windows-latest)
-        if: matrix.os == 'windows-latest'
-        run: |
+        if: matrix.os == 'windows-latest
+        run:
           $SCCACHE_FILE = "sccache-$Env:SCCACHE_VERSION-x86_64-pc-windows-msvc"
-          echo "$Env:SCCACHE_LINK/$Env:SCCACHE_VERSION/$SCCACHE_FILE.tar.gz"
           curl -LO "$Env:SCCACHE_LINK/$Env:SCCACHE_VERSION/$SCCACHE_FILE.tar.gz"
           tar xzf "$SCCACHE_FILE.tar.gz"
           echo "$Env:GITHUB_WORKSPACE/$SCCACHE_FILE" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
@@ -102,18 +100,18 @@ jobs:
       - name: Run Clippy
         if: matrix.os == 'ubuntu-latest'
         run: cargo clippy --all-features --all-targets -- -D warnings
-      - name: Run tests frontend
-        if: matrix.conf == 'run-wasm'
-        run: cargo test --manifest-path url-shorter-frontend/Cargo.toml --verbose
-      - name: Run tests backend
-        if: matrix.conf != 'run-wasn'
-        run: cargo test --manifest-path url-shorter-backend/Cargo.toml --verbose
       - name: Build release frontend
         if: matrix.conf == 'run-wasn'
         run: cargo build --verbose --manifest-path url-shorter-frontend/Cargo.toml --target wasm32-unknown-unknown --release
       - name: Build release backend
         if: matrix.conf != 'run-wasn'
         run: cargo build --verbose --manifest-path url-shorter-backend/Cargo.toml --release
+      - name: Run tests frontend
+        if: matrix.conf == 'run-wasm'
+        run: cargo test --manifest-path url-shorter-frontend/Cargo.toml --verbose
+      - name: Run tests backend
+        if: matrix.conf != 'run-wasn'
+        run: cargo test --manifest-path url-shorter-backend/Cargo.toml --verbose
       - name: Print sccache stats
         run: sccache --show-stats
       - name: Stop sccache server
